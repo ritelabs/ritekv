@@ -1,0 +1,58 @@
+mod memory;
+
+pub use memory::MemStore;
+
+use crate::result::Result;
+
+use std::fmt::Display;
+
+/// A key/value store.
+pub trait Store: Display + Send + Sync {
+    /// Gets a value for a key, if it exists.
+    fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>>;
+
+    /// Sets a value for a key, replacing the existing value if any.
+    fn set(&mut self, key: impl AsRef<[u8]>, value: impl AsRef<[u8]>) -> Result<()>;
+
+    /// Removes a key, or does nothing if it does not exist.
+    fn remove(&mut self, key: impl AsRef<[u8]>) -> Result<()>;
+}
+
+#[cfg(test)]
+trait TestSuite<S: Store> {
+    fn setup() -> Result<S>;
+
+    fn test() -> Result<()> {
+        Self::test_remove()?;
+        Self::test_get()?;
+        Self::test_set()?;
+        Ok(())
+    }
+
+    fn test_get() -> Result<()> {
+        let mut s = Self::setup()?;
+        s.set(b"a", vec![0x01])?;
+        assert_eq!(Some(vec![0x01]), s.get(b"a")?);
+        assert_eq!(None, s.get(b"b")?);
+        Ok(())
+    }
+
+    fn test_remove() -> Result<()> {
+        let mut s = Self::setup()?;
+        s.set(b"a", vec![0x01])?;
+        assert_eq!(Some(vec![0x01]), s.get(b"a")?);
+        s.remove(b"a")?;
+        assert_eq!(None, s.get(b"a")?);
+        s.remove(b"b")?;
+        Ok(())
+    }
+
+    fn test_set() -> Result<()> {
+        let mut s = Self::setup()?;
+        s.set(b"a", vec![0x01])?;
+        assert_eq!(Some(vec![0x01]), s.get(b"a")?);
+        s.set(b"a", vec![0x02])?;
+        assert_eq!(Some(vec![0x02]), s.get(b"a")?);
+        Ok(())
+    }
+}
