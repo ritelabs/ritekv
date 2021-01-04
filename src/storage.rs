@@ -16,6 +16,9 @@ pub trait Store: Display + Send + Sync {
 
     /// Removes a key, or does nothing if it does not exist.
     fn remove(&mut self, key: impl AsRef<[u8]>) -> Result<()>;
+
+    // Returns `true` if the store contains a value for the specified key.
+    fn contains(&mut self, key: impl AsRef<[u8]>) -> Result<bool>;
 }
 
 #[cfg(test)]
@@ -26,6 +29,7 @@ trait TestSuite<S: Store> {
         Self::test_remove()?;
         Self::test_get()?;
         Self::test_set()?;
+        Self::test_contains()?;
         Ok(())
     }
 
@@ -53,6 +57,14 @@ trait TestSuite<S: Store> {
         assert_eq!(Some(vec![0x01]), s.get(b"a")?);
         s.set(b"a", vec![0x02])?;
         assert_eq!(Some(vec![0x02]), s.get(b"a")?);
+        Ok(())
+    }
+
+    fn test_contains() -> Result<()> {
+        let mut s = Self::setup()?;
+        s.set(b"a", vec![0x01])?;
+        assert_eq!(true, s.contains(b"a")?);
+        assert_eq!(false, s.contains(b"b")?);
         Ok(())
     }
 }

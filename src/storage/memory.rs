@@ -50,6 +50,11 @@ impl Store for MemStore {
         self.storage.remove(&key);
         Ok(())
     }
+
+    fn contains(&mut self, key: impl AsRef<[u8]>) -> Result<bool> {
+        let key = key.as_ref().to_owned();
+        Ok(self.storage.contains_key(&key))
+    }
 }
 
 #[cfg(test)]
