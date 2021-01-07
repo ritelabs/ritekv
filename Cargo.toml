@@ -11,3 +11,4 @@ description = "RiteKV, A key-value store written in Rust."
 
 [dependencies]
 griddle = "0.4.1"
+parking_lot = "0.11.1"

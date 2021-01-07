@@ -3,20 +3,22 @@ use super::Store;
 use crate::result::Result;
 
 use std::fmt::Display;
+use std::sync::Arc;
 
 use griddle::HashMap;
+use parking_lot::RwLock;
 
 /// The `MemStore` stores  key/value pairs.
 ///
 /// In-memory key-value store using the `griddle` library `HashMap` implementation and not persisted to disk.
 pub struct MemStore {
-    storage: HashMap<Vec<u8>, Vec<u8>>,
+    storage: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>>>>,
 }
 
 impl MemStore {
     /// Creates a new Memory key-value storage engine.
     pub fn open() -> Self {
-        Self { storage: HashMap::new() }
+        MemStore { storage: Arc::new(RwLock::new(HashMap::new())) }
     }
 }
 
@@ -34,26 +36,34 @@ impl Display for MemStore {
 
 impl Store for MemStore {
     fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>> {
+        let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
-        Ok(self.storage.get(&key).cloned())
+        let storage = storage.read();
+        Ok(storage.get(&key).cloned())
     }
 
     fn set(&mut self, key: impl AsRef<[u8]>, value: impl AsRef<[u8]>) -> Result<()> {
+        let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
         let value = value.as_ref().to_owned();
-        self.storage.insert(key, value);
+        let mut storage = storage.write();
+        storage.insert(key, value);
         Ok(())
     }
 
     fn remove(&mut self, key: impl AsRef<[u8]>) -> Result<()> {
+        let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
-        self.storage.remove(&key);
+        let mut storage = storage.write();
+        storage.remove(&key);
         Ok(())
     }
 
     fn contains(&mut self, key: impl AsRef<[u8]>) -> Result<bool> {
+        let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
-        Ok(self.storage.contains_key(&key))
+        let storage = storage.read();
+        Ok(storage.contains_key(&key))
     }
 }
 
