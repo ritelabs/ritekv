@@ -3,22 +3,24 @@ use super::Store;
 use crate::result::Result;
 
 use std::fmt::Display;
+use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 
 use griddle::HashMap;
 use parking_lot::RwLock;
+use seahash::SeaHasher;
 
 /// The `MemStore` stores  key/value pairs.
 ///
 /// In-memory key-value store using the `griddle` library `HashMap` implementation and not persisted to disk.
 pub struct MemStore {
-    storage: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>>>>,
+    storage: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>, BuildHasherDefault<SeaHasher>>>>,
 }
 
 impl MemStore {
     /// Creates a new Memory key-value storage engine.
     pub fn open() -> Self {
-        MemStore { storage: Arc::new(RwLock::new(HashMap::new())) }
+        MemStore { storage: Arc::new(RwLock::new(HashMap::default())) }
     }
 }
 
