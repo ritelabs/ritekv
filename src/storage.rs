@@ -6,7 +6,7 @@ use crate::result::Result;
 
 use std::fmt::Display;
 
-/// A key/value store.
+/// A key/value store trait for basic ops.
 pub trait Store: Display + Send + Sync {
     /// Gets a value for a key, if it exists.
     fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>>;
@@ -19,6 +19,22 @@ pub trait Store: Display + Send + Sync {
 
     // Returns `true` if the store contains a value for the specified key.
     fn contains(&mut self, key: impl AsRef<[u8]>) -> Result<bool>;
+}
+
+/// A key/value store trait for batch ops.
+pub trait BatchStore: Display + Send + Sync {
+    /// Gets values for keys, if them exist.
+    fn get_batch(&self, keys: impl AsRef<[Vec<u8>]>) -> Result<Vec<Option<Vec<u8>>>>;
+
+    /// Sets values for keys, replacing the existing values if any.
+    fn set_batch(
+        &mut self,
+        keys: impl AsRef<[Vec<u8>]>,
+        values: impl AsRef<[Vec<u8>]>,
+    ) -> Result<()>;
+
+    /// Removes keys, or does nothing if them do not exist.
+    fn remove_batch(&mut self, keys: impl AsRef<[Vec<u8>]>) -> Result<()>;
 }
 
 #[cfg(test)]
