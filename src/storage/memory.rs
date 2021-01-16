@@ -14,7 +14,7 @@ use seahash::SeaHasher;
 
 /// The `MemStore` stores  key/value pairs.
 ///
-/// In-memory key-value store using the `griddle` library `HashMap` implementation and not persisted to disk.
+/// In-memory key-value store using `HashMap` implementation and not persisted to disk.
 pub struct MemStore {
     storage: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>, BuildHasherDefault<SeaHasher>>>>,
 }
