@@ -122,7 +122,20 @@ impl super::TestSuite<MemStore> for MemStore {
 }
 
 #[test]
-fn tests() -> Result<()> {
+fn test_basic() -> Result<()> {
     use super::TestSuite;
+    MemStore::test()
+}
+
+#[cfg(test)]
+impl super::TestBatchSuite<MemStore> for MemStore {
+    fn setup() -> Result<Self> {
+        Ok(MemStore::open())
+    }
+}
+
+#[test]
+fn test_batch() -> Result<()> {
+    use super::TestBatchSuite;
     MemStore::test()
 }

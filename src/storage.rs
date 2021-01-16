@@ -84,3 +84,55 @@ trait TestSuite<S: Store> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+trait TestBatchSuite<B: Store + BatchStore> {
+    fn setup() -> Result<B>;
+
+    fn test() -> Result<()> {
+        Self::test_get_batch()?;
+        Self::test_set_batch()?;
+        Self::test_remove_batch()?;
+        Ok(())
+    }
+
+    fn test_get_batch() -> Result<()> {
+        let mut s = Self::setup()?;
+        let data1 = b"test1".to_vec();
+        let data2 = b"test2".to_vec();
+        s.set(data1.clone(), data1.clone()).unwrap();
+        s.set(data2.clone(), data2.clone()).unwrap();
+        assert_eq!(s.get(data1.clone())?, Some(data1.clone()));
+        assert_eq!(s.get(data2.clone())?, Some(data2.clone()));
+        assert_eq!(
+            s.get_batch(vec![data1.clone(), data2.clone()])?,
+            vec![Some(data1), Some(data2)]
+        );
+        Ok(())
+    }
+
+    fn test_set_batch() -> Result<()> {
+        let mut s = Self::setup()?;
+        let data1 = b"test1".to_vec();
+        let data2 = b"test2".to_vec();
+        s.set_batch(vec![data1.clone(), data2.clone()], vec![data1.clone(), data2.clone()])
+            .unwrap();
+        assert_eq!(s.get(data1.clone())?, Some(data1.clone()));
+        assert_eq!(s.get(data2.clone())?, Some(data2.clone()));
+        Ok(())
+    }
+
+    fn test_remove_batch() -> Result<()> {
+        let mut s = Self::setup()?;
+        let data1 = b"test1".to_vec();
+        let data2 = b"test2".to_vec();
+        s.set(data1.clone(), data1.clone()).unwrap();
+        s.set(data2.clone(), data2.clone()).unwrap();
+        assert_eq!(s.get(data1.clone())?, Some(data1.clone()));
+        assert_eq!(s.get(data2.clone())?, Some(data2.clone()));
+        s.remove_batch(&[data1.clone(), data2.clone()]).unwrap();
+        assert_eq!(s.get(data1)?, None);
+        assert_eq!(s.get(data2)?, None);
+        Ok(())
+    }
+}
