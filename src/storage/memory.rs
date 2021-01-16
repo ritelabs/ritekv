@@ -12,18 +12,20 @@ use griddle::HashMap;
 use parking_lot::RwLock;
 use seahash::SeaHasher;
 
+type SeaHashMap = HashMap<Vec<u8>, Vec<u8>, BuildHasherDefault<SeaHasher>>;
+
 /// The `MemStore` stores  key/value pairs.
 ///
 /// In-memory key-value store using `HashMap` implementation and not persisted to disk.
 pub struct MemStore {
-    storage: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>, BuildHasherDefault<SeaHasher>>>>,
+    storage: Arc<RwLock<SeaHashMap>>,
 }
 
 impl MemStore {
     /// Creates a new Memory key-value storage engine.
     #[inline]
     pub fn open() -> Self {
-        MemStore { storage: Arc::new(RwLock::new(HashMap::default())) }
+        MemStore { storage: Arc::new(RwLock::new(SeaHashMap::default())) }
     }
 }
 
