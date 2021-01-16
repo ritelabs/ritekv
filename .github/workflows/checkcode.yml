@@ -22,7 +22,6 @@ jobs:
         rust: [nightly, beta, stable]
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
 
     steps:
     - name: "Checkout Repository"
@@ -33,7 +32,6 @@ jobs:
       with:
         profile: minimal
         toolchain:  ${{ matrix.rust }}
-        components: rustfmt, clippy
         override: true
         
     - name: Cache cargo registry
@@ -77,6 +75,22 @@ jobs:
         command: test
         args: --no-default-features
 
+  check:
+    name: "Clippy & Format"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@master
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain:  stable
+        components: rustfmt, clippy
+        override: true
+        
     - name: Clippy warnings
       uses: actions-rs/cargo@v1
       with:
