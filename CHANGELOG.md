@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## Unreleased
+## [v0.1.0](https://github.com/ritedb/ritekv/releases/tag/v0.1.0) - 2021-01-16 14:41:43
 
-Changes unreleased.
+*No description*
 
 ### Feature
 
@@ -28,6 +28,7 @@ Changes unreleased.
 ### Documentation
 
 - changlog:
+  - auto update by ci ([5809292](https://github.com/ritedb/ritekv/commit/58092926ef0680959e4f71ac3b91a466867f9290))
   - auto update by ci ([4137002](https://github.com/ritedb/ritekv/commit/413700211f42b042500f071d0ff1e04ead82a29c))
 
 - *:
