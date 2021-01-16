@@ -1,10 +1,13 @@
 use crate::result::Result;
 use crate::storage::{BatchStore, Store};
 
+#[cfg(not(feature = "amortized"))]
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 
+#[cfg(feature = "amortized")]
 use griddle::HashMap;
 use parking_lot::RwLock;
 use seahash::SeaHasher;
