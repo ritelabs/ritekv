@@ -14,71 +14,76 @@ jobs:
 
     strategy:
       matrix:
-        platform: [
+        os: [
           ubuntu-latest,
           macos-latest,
           windows-latest
         ]
+        rust: [nightly, beta, stable]
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
 
     steps:
     - name: "Checkout Repository"
-      uses: actions/checkout@v1
+      uses: actions/checkout@master
 
-    - name: Install Rustup
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-        echo ::add-path::$HOME/.cargo/bin
-      if: runner.os == 'macOS'
-
-    - name: "Print Rust Version"
-      run: |
-        rustc -Vv
-        cargo -Vv
-    - name: "Build for Linux"
-      if: runner.os == 'Linux'
-      run: |
-        cargo build
-        cargo test
-    - name: "Build for macOS"
-      if: runner.os == 'macOS'
-      run: |
-        cargo build
-        cargo test
-    - name: "Build for Windows"
-      if: runner.os == 'Windows'
-      run: |
-        cargo build
-        cargo test
-
-  check_formatting:
-    name: "Check Formatting"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-    - uses: actions/checkout@v1
-    - name: "Use the latest Rust stable with rustfmt"
+    - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: stable
-          profile: minimal
-          components: rustfmt
-          override: true
-    - run: cargo fmt -- --check
-
-  check_clippy:
-    name: "Check Clippy"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-    - uses: actions/checkout@v1
-    - name: "Use the latest Rust stable with clippy"
-      uses: actions-rs/toolchain@v1
+        profile: minimal
+        components: rustfmt, clippy
+        override: true
+        
+    - name: Cache cargo registry
+      uses: actions/cache@v1
       with:
-          toolchain: stable
-          profile: minimal
-          components: clippy
-          override: true
-    - run: cargo clippy
+        path: ~/.cargo/registry
+        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Cache cargo index
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo/git
+        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-index-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Cache cargo build
+      uses: actions/cache@v1
+      with:
+        path: target
+        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
+        
+    - name: Release build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release
+    
+    - name: Release build without default features
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --no-default-features
+
+    - name: Cargo test
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+    
+    - name: Cargo test without default features
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --no-default-features
+
+    - name: Clippy warnings
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: -- -D warnings
+
+    - name: Cargo Fmt Check
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
