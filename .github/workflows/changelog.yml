@@ -1,32 +1,22 @@
-name: Changelog Generator
-
+name: Generate changelog
 on:
+  release:
+    types: [created, edited]
   push:
-    branches:
+    branches: 
       - main
-    tags:
-      - '*'
 
 jobs:
-  generate_changelog_file:
+  generate-changelog:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@master
-
-    - name: Setup ruby
-      uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7
-        
-    - name: Install github_changelog_generator
-      run: gem install github_changelog_generator
-      
-    - name: Gen changelog
-      run: github_changelog_generator -t ${{ secrets.GITHUB_TOKEN }} -u ritedb -p ritekv
-      
-    - name: Commit changes
-      uses: stefanzweifel/git-auto-commit-action@v4
+        fetch-depth: 0
+    - uses: BobAnkh/auto-generate-changelog@master
       with:
-        commit_message: 'docs(changlog): auto update by ci'
-        file_pattern: CHANGELOG.md
+        REPO_NAME: 'ritedb/ritekv'
+        ACCESS_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        PATH: '/CHANGELOG.md'
+        COMMIT_MESSAGE: 'docs(changlog): auto update by ci'
+        TYPE: 'feat:Feature,fix:Bug Fixes,docs:Documentation,refactor:Refactor,perf:Performance Improvements'
