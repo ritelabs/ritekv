@@ -1,4 +1,4 @@
-use crate::result::Result;
+use crate::result::{KvsError, Result};
 use crate::storage::{BatchStore, Store};
 
 #[cfg(not(feature = "amortized"))]
@@ -44,6 +44,9 @@ impl Store for MemStore {
     fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>> {
         let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
+        if key.is_empty() {
+            return Err(KvsError::EmptyKey);
+        }
         let storage = storage.read();
         Ok(storage.get(&key).cloned())
     }
@@ -52,6 +55,9 @@ impl Store for MemStore {
     fn set(&mut self, key: impl AsRef<[u8]>, value: impl AsRef<[u8]>) -> Result<()> {
         let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
+        if key.is_empty() {
+            return Err(KvsError::EmptyKey);
+        }
         let value = value.as_ref().to_owned();
         let mut storage = storage.write();
         storage.insert(key, value);
@@ -62,6 +68,9 @@ impl Store for MemStore {
     fn remove(&mut self, key: impl AsRef<[u8]>) -> Result<()> {
         let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
+        if key.is_empty() {
+            return Err(KvsError::EmptyKey);
+        }
         let mut storage = storage.write();
         storage.remove(&key);
         Ok(())
@@ -71,6 +80,9 @@ impl Store for MemStore {
     fn contains(&mut self, key: impl AsRef<[u8]>) -> Result<bool> {
         let storage = Arc::clone(&self.storage);
         let key = key.as_ref().to_owned();
+        if key.is_empty() {
+            return Err(KvsError::EmptyKey);
+        }
         let storage = storage.read();
         Ok(storage.contains_key(&key))
     }
@@ -95,6 +107,11 @@ impl BatchStore for MemStore {
         let storage = Arc::clone(&self.storage);
         let keys = keys.as_ref().to_owned();
         let values = values.as_ref().to_owned();
+        if keys.len() != values.len() {
+            return Err(KvsError::InvalidData(
+                "The number of keys does not match the number of values".to_string(),
+            ));
+        }
         let mut storage = storage.write();
         for i in 0..keys.len() {
             let key = keys[i].to_vec();
@@ -141,4 +158,28 @@ impl super::TestBatchSuite<MemStore> for MemStore {
 fn test_batch() -> Result<()> {
     use super::TestBatchSuite;
     MemStore::test()
+}
+
+#[test]
+fn test_empty_key_error() {
+    let mut store = MemStore::open();
+
+    let key = b"".to_vec();
+
+    match store.set(key, vec![0x01]) {
+        Err(KvsError::EmptyKey) => (), // pass
+        _ => panic!("should return error KvsError::EmptyKey"),
+    }
+}
+
+#[test]
+fn test_invalid_data_error() {
+    let mut store = MemStore::open();
+
+    let keys = b"".to_vec();
+
+    match store.set_batch(vec![keys], vec![]) {
+        Err(KvsError::InvalidData(_)) => (), // pass
+        _ => panic!("should return error KvsError::InvalidData"),
+    }
 }
