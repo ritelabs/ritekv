@@ -11,6 +11,10 @@ pub enum KvsError {
     IOError(#[from] std::io::Error),
     #[error("Internal Error: {0}")]
     Internal(String),
+    #[error("serde_json error: {0}")]
+    Serde(#[from] serde_json::Error),
+    #[error("Sled Error: {0}")]
+    Sled(#[from] sled::Error),
 }
 
 /// Custom `Result`

@@ -10,12 +10,31 @@ description = "RiteKV, A key-value store written in Rust."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-griddle = { version = "0.4.1", default-features = false, features = ["inline-more"], optional = true }
+griddle = { version = "0.5", default-features = false, features = ["inline-more", "serde"], optional = true }
 parking_lot = "0.11.1"
 seahash = "4.0.1"
+serde = { version = "1.0.126", features = ["derive"]}
+serde_json = "1"
+sled = "0.34"
 thiserror = "1.0.23"
 
 [features]
 default = ["amortized"]
 
 amortized = ["griddle"]
+
+[dev-dependencies]
+hashbrown = "0.11"
+criterion = "0.3"
+predicates = "1"
+rand = { version = "0.8", features = ["small_rng"]}
+tempfile = "3"
+walkdir = "2"
+
+[[bench]]
+name = "vroom"
+harness = false
+
+[[bench]]
+name = "disk_bench"
+harness = false

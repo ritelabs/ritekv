@@ -17,4 +17,4 @@
 pub mod result;
 pub mod storage;
 
-pub use storage::{BatchStore, MemStore, Store};
+pub use storage::{BatchStore, DiskStore, MemStore, SledStore, Store};

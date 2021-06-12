@@ -12,12 +12,16 @@ use griddle::HashMap;
 use parking_lot::RwLock;
 use seahash::SeaHasher;
 
+use serde::{Deserialize, Serialize};
+
 type SeaHashMap = HashMap<Vec<u8>, Vec<u8>, BuildHasherDefault<SeaHasher>>;
 
 /// The `MemStore` stores  key/value pairs.
 ///
 /// In-memory key-value store using `HashMap` implementation and not persisted to disk.
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MemStore {
+    #[serde(with = "arc_rwlock_serde")]
     storage: Arc<RwLock<SeaHashMap>>,
 }
 
@@ -183,5 +187,30 @@ fn test_invalid_data_error() {
     match store.set_batch(vec![keys], vec![]) {
         Err(KvsError::InvalidData(_)) => (), // pass
         _ => panic!("should return error KvsError::InvalidData"),
+    }
+}
+
+mod arc_rwlock_serde {
+    use serde::de::Deserializer;
+    use serde::ser::Serializer;
+    use serde::{Deserialize, Serialize};
+    use std::sync::Arc;
+
+    use parking_lot::RwLock;
+
+    pub fn serialize<S, T>(val: &Arc<RwLock<T>>, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: Serialize,
+    {
+        T::serialize(&*val.read(), s)
+    }
+
+    pub fn deserialize<'de, D, T>(d: D) -> Result<Arc<RwLock<T>>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: Deserialize<'de>,
+    {
+        Ok(Arc::new(RwLock::new(T::deserialize(d)?)))
     }
 }

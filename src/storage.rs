@@ -1,5 +1,9 @@
+mod disk;
 mod memory;
+mod sled;
 
+pub use self::sled::SledStore;
+pub use disk::DiskStore;
 pub use memory::MemStore;
 
 use crate::result::Result;
